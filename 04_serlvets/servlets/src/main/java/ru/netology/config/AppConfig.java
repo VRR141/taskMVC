@@ -2,26 +2,17 @@ package ru.netology.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import ru.netology.controller.PostController;
-import ru.netology.repository.PostRepository;
-import ru.netology.repository.PostRepositoryImpl;
-import ru.netology.service.PostService;
+import org.springframework.http.converter.json.GsonHttpMessageConverter;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 
 @Configuration
 public class AppConfig {
 
     @Bean
-    PostRepository repository(){
-        return new PostRepositoryImpl();
+    public RequestMappingHandlerAdapter requestMappingHandlerAdapter() {
+        final var bean = new RequestMappingHandlerAdapter();
+        bean.getMessageConverters().add(new GsonHttpMessageConverter());
+        return bean;
     }
 
-    @Bean
-    PostService service(){
-        return new PostService(repository());
-    }
-
-    @Bean
-    PostController controller(){
-        return new PostController(service());
-    }
 }
