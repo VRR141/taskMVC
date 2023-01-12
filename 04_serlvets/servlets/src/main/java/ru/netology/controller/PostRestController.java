@@ -1,7 +1,10 @@
 package ru.netology.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.netology.exception.NotFoundException;
 import ru.netology.model.Post;
 import ru.netology.service.PostService;
 
@@ -34,7 +37,13 @@ public class PostRestController {
     }
 
     @DeleteMapping("/{id}")
-    public void removeById(long id) {
+    public void removeById(@PathVariable long id) {
         service.removeById(id);
     }
+
+    @ExceptionHandler({NotFoundException.class, })
+    public ResponseEntity handleNotFoundException(NotFoundException e){
+        return new ResponseEntity(HttpStatus.NOT_FOUND);
+    }
+
 }
