@@ -19,19 +19,31 @@ public class PostRepositoryImpl implements PostRepository {
 
   private AtomicLong aLong;
 
+  private ConcurrentHashMap<Long, Boolean> deletedTable;
+
   public PostRepositoryImpl() {
     storage = new ConcurrentHashMap<>();
+    deletedTable = new ConcurrentHashMap<>();
     aLong = new AtomicLong(1);
     fillPosts();
   }
 
   public List<Post> all() {
     Collection<Post> posts = storage.values();
-    List<Post> result = posts.stream().collect(Collectors.toList());
+    List<Post> result = posts.stream().filter(post -> !deletedTable.get(post.getId())).collect(Collectors.toList());
     return result;
   }
 
   public Optional<Post> getById(long id) {
+    boolean deleted;
+    try {
+      deleted = deletedTable.get(id);
+    } catch (NullPointerException e){
+      deleted = true;
+    }
+    if (deleted){
+      throw new NotFoundException(String.format("post with id: %s not found", id));
+    }
     return Optional.ofNullable(storage.get(id));
   }
 
@@ -54,7 +66,7 @@ public class PostRepositoryImpl implements PostRepository {
 
   public void removeById(long id) {
     if (storage.containsKey(id)) {
-      storage.remove(id);
+      deletedTable.put(id , true);
       return;
     }
     throw new NotFoundException();
@@ -63,6 +75,7 @@ public class PostRepositoryImpl implements PostRepository {
   private void createNewPost(Post post){
     post.setId(aLong.get());
     storage.put(aLong.get(), post);
+    deletedTable.put(aLong.get(), false);
     aLong.getAndIncrement();
   }
 
